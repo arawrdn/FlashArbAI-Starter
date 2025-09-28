@@ -18,5 +18,5 @@ Starter repository for building an AI-driven DeFi arbitrage scanner integrated w
 ## Quickstart (local)
 1. Clone repo
 ```bash
-git clone https://github.com/<username>/FlashArbAI-Starter.git
+git clone https://github.com/<arawrdn>/FlashArbAI-Starter.git
 cd FlashArbAI-Starter
