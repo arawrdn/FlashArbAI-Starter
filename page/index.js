@@ -1,69 +1,75 @@
+"use client";
+
 import { useState } from "react";
 import {
   WagmiConfig,
   configureChains,
   createClient,
-  useAccount,
-  useConnect,
-  useDisconnect,
 } from "wagmi";
 import { mainnet } from "wagmi/chains";
-import { InjectedConnector } from "wagmi/connectors/injected";
 import { publicProvider } from "wagmi/providers/public";
 
+import { createAppKit } from "@reown/appkit";
+import { WagmiAdapter } from "@reown/appkit-adapter-wagmi";
+
+// Konfigurasi chains & providers
 const { chains, provider } = configureChains([mainnet], [publicProvider()]);
-const client = createClient({
-  autoConnect: true,
-  connectors: [new InjectedConnector({ chains })],
-  provider,
+
+// Wagmi adapter untuk Reown AppKit
+const wagmiAdapter = new WagmiAdapter({
+  chains,
+  projectId: "180a7164cfa9e5388daf1160841f65a0", // Project ID kamu
 });
 
-function WalletConnector() {
-  const { address, isConnected } = useAccount();
-  const { connect, connectors } = useConnect();
-  const { disconnect } = useDisconnect();
+// Client wagmi
+const client = createClient({
+  autoConnect: true,
+  connectors: wagmiAdapter.connectors,
+  provider: wagmiAdapter.provider,
+});
 
-  if (isConnected) {
-    return (
-      <div>
-        <p>Connected: {address}</p>
-        <button onClick={() => disconnect()}>Disconnect</button>
-      </div>
-    );
-  }
-
-  return (
-    <div>
-      {connectors.map((connector) => (
-        <button key={connector.id} onClick={() => connect({ connector })}>
-          Connect with {connector.name}
-        </button>
-      ))}
-    </div>
-  );
-}
+// Inisialisasi AppKit (UI modal untuk koneksi multi-wallet)
+createAppKit({
+  adapters: [wagmiAdapter],
+  projectId: "180a7164cfa9e5388daf1160841f65a0", // Project ID sama
+  chains,
+  metadata: {
+    name: "FlashArbAI",
+    description: "AI-driven DeFi Arbitrage Scanner",
+    url: "http://localhost:3000",
+    icons: ["https://your-dapp-url.com/icon.png"],
+  },
+});
 
 export default function Home() {
   const [arb, setArb] = useState(null);
 
   async function checkArbitrage() {
-    // dummy prices from Uniswap & Balancer
+    // Dummy prices
     const uniPrice = 1000;
     const balPrice = 1015;
 
     if (balPrice - uniPrice > 10) {
-      setArb(`Arbitrage opportunity: Buy at Uniswap (${uniPrice}), Sell at Balancer (${balPrice})`);
+      setArb(
+        `✅ Arbitrage opportunity: Buy at Uniswap (${uniPrice}), Sell at Balancer (${balPrice})`
+      );
     } else {
-      setArb("No arbitrage opportunity.");
+      setArb("❌ No arbitrage opportunity found.");
     }
   }
 
   return (
     <WagmiConfig client={client}>
-      <div style={{ padding: "20px" }}>
-        <h1>FlashArbAI Starter</h1>
-        <WalletConnector />
-        <button onClick={checkArbitrage}>Check Arbitrage</button>
+      <div style={{ padding: "20px", fontFamily: "sans-serif" }}>
+        <h1>⚡ FlashArbAI Starter</h1>
+
+        {/* Tombol modal multi-wallet */}
+        <appkit-button />
+
+        <button onClick={checkArbitrage} style={{ marginTop: "15px" }}>
+          Check Arbitrage
+        </button>
+
         {arb && <p>{arb}</p>}
       </div>
     </WagmiConfig>
